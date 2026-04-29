@@ -13,11 +13,11 @@ interface MoodFormProps {
 }
 
 const MOODS: { id: Mood; emoji: string; label: string; color: string }[] = [
-  { id: 'great', emoji: '😄', label: 'Increíble', color: 'text-mood-great' },
+  { id: 'great', emoji: '🤩', label: 'Increíble', color: 'text-mood-great' },
   { id: 'good', emoji: '😊', label: 'Bien', color: 'text-mood-good' },
   { id: 'normal', emoji: '😐', label: 'Normal', color: 'text-mood-normal' },
-  { id: 'bad', emoji: '😞', label: 'Mal', color: 'text-mood-bad' },
-  { id: 'awful', emoji: '😢', label: 'Horrible', color: 'text-mood-awful' },
+  { id: 'bad', emoji: '😔', label: 'Mal', color: 'text-mood-bad' },
+  { id: 'awful', emoji: '😭', label: 'Horrible', color: 'text-mood-awful' },
 ];
 
 const ENERGIES: { id: Energy; label: string }[] = [
