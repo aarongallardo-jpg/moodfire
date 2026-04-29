@@ -51,7 +51,7 @@ export default function MoodForm({ selectedDate, initialData, onSave }: MoodForm
     if (!mood || !energy) return; // Basic validation
 
     setIsSaving(true);
-    
+
     const entry: MoodEntry = {
       date: selectedDate,
       mood,
@@ -174,13 +174,13 @@ export default function MoodForm({ selectedDate, initialData, onSave }: MoodForm
           animate={isSaving ? { scale: [1, 1.02, 1], opacity: [1, 0.8, 1] } : {}}
           className={`
             w-full py-3.5 rounded-lg font-semibold text-[14px] flex items-center justify-center gap-2 transition-all
-            ${isComplete 
-              ? 'bg-primary text-black hover:bg-primary-dim cursor-pointer' 
+            ${isComplete
+              ? 'bg-primary text-black hover:bg-primary-dim cursor-pointer'
               : 'bg-surface-container-highest text-on-surface-variant cursor-not-allowed opacity-50'}
           `}
         >
           <Flame size={18} className={isSaving ? 'animate-pulse' : ''} />
-          {isSaving ? 'Guardando...' : initialData ? 'Actualizar Registro' : 'Guardar Registro'}
+          {isSaving ? 'Guardando.oo..' : initialData ? 'Actualizar Registro' : 'Guardar Registro'}
         </motion.button>
       </div>
     </div>
