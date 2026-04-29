@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import Calendar from '@/components/Calendar';
 import MoodForm from '@/components/MoodForm';
-import { getEntries, saveEntry } from '@/lib/storage';
+import StreakCounter from '@/components/StreakCounter';
+import { getEntries, saveEntry, deleteEntry } from '@/lib/storage';
 import { MoodEntry } from '@/lib/types';
-import { LogIn, LogOut, Cloud, HardDrive, Loader2 } from 'lucide-react';
-import { auth, loginWithGoogle, logout, syncCloudData, saveCloudEntry } from '@/lib/firebase';
+import { LogIn, LogOut, Cloud, HardDrive, Loader2, Flame } from 'lucide-react';
+import { auth, loginWithGoogle, logout, syncCloudData, saveCloudEntry, deleteCloudEntry } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { calculateStreak } from '@/lib/streak';
 
 export default function Home() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -17,6 +19,17 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState('');
+  const [streak, setStreak] = useState(0);
+
+  const TIPS = [
+    "La consistencia es la clave. Registra tu día para descubrir patrones.",
+    "¿Has bebido suficiente agua hoy? Tu cuerpo y mente lo agradecerán.",
+    "Un pequeño paseo de 10 minutos puede cambiar tu perspectiva.",
+    "La gratitud transforma lo que tenemos en suficiente.",
+    "Recuerda que está bien no estar bien a veces. Sé amable contigo."
+  ];
+
+  const [dailyTip] = useState(() => TIPS[Math.floor(Math.random() * TIPS.length)]);
 
   useEffect(() => {
     const initApp = async () => {
@@ -40,14 +53,19 @@ export default function Home() {
               setEntries(mergedData);
               // Update local with cloud data so they stay in sync
               Object.values(mergedData).forEach(entry => saveEntry(entry));
+              setStreak(calculateStreak(mergedData));
               setSyncError('');
             } catch (e: any) {
               setSyncError('Error de sincronización. Trabajando en modo local.');
             } finally {
               setIsSyncing(false);
             }
+          } else {
+             setStreak(calculateStreak(getEntries()));
           }
         });
+      } else {
+        setStreak(calculateStreak(getEntries()));
       }
     };
     initApp();
@@ -69,6 +87,7 @@ export default function Home() {
     // 1. Save locally first (optimistic update)
     const updatedEntries = saveEntry(entry);
     setEntries(updatedEntries);
+    setStreak(calculateStreak(updatedEntries));
 
     // 2. Save to cloud if logged in
     if (user) {
@@ -78,6 +97,23 @@ export default function Home() {
       } catch (e: any) {
         console.error(e);
         setSyncError('No se pudo guardar en la nube. Se guardó localmente.');
+      }
+    }
+  };
+
+  const handleDeleteEntry = async (date: string) => {
+    // 1. Delete locally
+    const updatedEntries = deleteEntry(date);
+    setEntries({ ...updatedEntries });
+    setStreak(calculateStreak(updatedEntries));
+
+    // 2. Delete from cloud if logged in
+    if (user) {
+      try {
+        await deleteCloudEntry(user.uid, date);
+      } catch (e) {
+        console.error(e);
+        setSyncError('No se pudo eliminar de la nube.');
       }
     }
   };
@@ -109,6 +145,8 @@ export default function Home() {
               {user ? (isSyncing ? 'Sincronizando' : syncError ? 'Local (Error)' : 'Nube') : 'Local'}
             </span>
           </div>
+
+          <StreakCounter streak={streak} />
         </div>
         <div className="flex items-center gap-6">
           {!user ? (
@@ -153,11 +191,14 @@ export default function Home() {
           />
 
           {/* Decorative / Creative Element below calendar */}
-          <div className="mt-12 p-6 bg-surface rounded-xl border border-outline relative overflow-hidden hidden md:block">
+          <div className="mt-12 p-6 bg-surface rounded-xl border border-outline relative overflow-hidden hidden md:block group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Flame size={80} />
+            </div>
             <span className="text-[10px] uppercase tracking-widest text-primary mb-3 block">Consejo Diario</span>
             <h3 className="font-headline text-xl mb-2 text-white font-light">El calor de tus días</h3>
             <p className="text-on-surface-variant text-[13px] max-w-md leading-relaxed">
-              La consistencia es la clave. Registra tu estado de ánimo diariamente para descubrir patrones y mantener viva la llama de tu bienestar emocional.
+              {dailyTip}
             </p>
           </div>
         </section>
@@ -168,6 +209,7 @@ export default function Home() {
             selectedDate={selectedDate}
             initialData={entries[selectedDate]}
             onSave={handleSaveEntry}
+            onDelete={handleDeleteEntry}
           />
         </section>
 

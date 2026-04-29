@@ -33,7 +33,7 @@ export const syncCloudData = async (userId: string, localEntries: Record<string,
     try {
         const moodsRef = collection(db, 'usuarios', userId, 'moods');
         const querySnapshot = await getDocs(moodsRef);
-        
+
         const cloudEntries: Record<string, MoodEntry> = {};
         querySnapshot.forEach((doc) => {
             const data = doc.data();
@@ -49,16 +49,18 @@ export const syncCloudData = async (userId: string, localEntries: Record<string,
 
         const mergedEntries = { ...cloudEntries };
 
-        for (const [date, localEntry] of Object.entries(localEntries)) {
+        const syncPromises = Object.entries(localEntries).map(async ([date, localEntry]) => {
             const cloudEntry = cloudEntries[date];
             if (!cloudEntry || localEntry.timestamp > cloudEntry.timestamp) {
-                await setDoc(doc(db, 'usuarios', userId, 'moods', date), {
+                await setDoc(doc(db!, 'usuarios', userId, 'moods', date), {
                     ...localEntry,
                     updatedAt: Timestamp.now()
                 });
                 mergedEntries[date] = localEntry;
             }
-        }
+        });
+
+        await Promise.all(syncPromises);
 
         return mergedEntries;
     } catch (error) {
@@ -77,5 +79,15 @@ export const saveCloudEntry = async (userId: string, entry: MoodEntry) => {
     } catch (error) {
         console.error("Error saving entry to cloud:", error);
         throw error; // Let UI handle error
+    }
+}
+
+export const deleteCloudEntry = async (userId: string, date: string) => {
+    if (!db) return;
+    try {
+        await deleteDoc(doc(db, 'usuarios', userId, 'moods', date));
+    } catch (error) {
+        console.error("Error deleting entry from cloud:", error);
+        throw error;
     }
 }

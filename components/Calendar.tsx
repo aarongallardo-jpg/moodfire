@@ -65,6 +65,15 @@ export default function Calendar({ currentMonth, onMonthChange, selectedDate, on
         </div>
         <div className="flex gap-2">
           <button 
+            onClick={() => {
+              onMonthChange(new Date());
+              onSelectDate(todayStr);
+            }}
+            className="px-3 py-1.5 rounded-lg bg-surface border border-outline hover:bg-surface-container-high transition-colors text-on-surface text-[11px] font-bold uppercase tracking-widest"
+          >
+            Hoy
+          </button>
+          <button 
             onClick={handlePrevMonth}
             className="p-2 rounded-lg bg-surface border border-outline hover:bg-surface-container-high transition-colors text-on-surface"
           >
@@ -99,8 +108,11 @@ export default function Calendar({ currentMonth, onMonthChange, selectedDate, on
 
           return (
             <motion.button
-              key={dayNum}
+              key={dateStr}
               onClick={() => onSelectDate(dateStr)}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.01 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={`

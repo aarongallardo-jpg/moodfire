@@ -23,3 +23,13 @@ export const saveEntry = (entry: MoodEntry): Record<string, MoodEntry> => {
   }
   return entries;
 };
+export const deleteEntry = (date: string): Record<string, MoodEntry> => {
+  const entries = getEntries();
+  delete entries[date];
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  } catch (e) {
+    console.error("Error deleting from localStorage", e);
+  }
+  return entries;
+};
